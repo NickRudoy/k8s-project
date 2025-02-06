@@ -1,0 +1,29 @@
+name: Build and Push Docker images
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    
+    - name: Login to Yandex Cloud Container Registry
+      uses: yc-actions/yc-cr-login@v1
+      with:
+        yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+    - name: Build and push Docker images
+      env:
+        CR_REGISTRY: cr.yandex/your-registry-id
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $CR_REGISTRY/test-app:$IMAGE_TAG ./src
+        docker push $CR_REGISTRY/test-app:$IMAGE_TAG
